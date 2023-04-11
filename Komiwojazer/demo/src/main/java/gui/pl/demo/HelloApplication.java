@@ -114,13 +114,41 @@ public class HelloApplication extends JPanel implements  ActionListener {
             }
         });
 
+        // - ustaw startowy
+        JButton jStart = new JButton("Oznacz jako startowy");
+        jStart.setSize(new Dimension(30, 30));
+        jStart.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (list.getSelectedValue() != null) {
+                    Point selectedPoint = list.getSelectedValue();
+                    for (Point point : points)
+                        if (point.isFirst) {
+                            point.isFirst = false;
+                            break;
+                        }
+                    selectedPoint.isFirst = true;
+                    drawingPath = false;
+                    list.setListData(points.toArray(new Point[points.size()])); // odświeżenie listy
+                    repaint();
+                }
+            }
+        });
+
+
         // - komiwojazer
         JButton komiwojazer = new JButton("Rozwiąż problem");
         komiwojazer.setSize(new Dimension(30, 30));
         komiwojazer.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                tsp2(points,1);
+                int i;
+                for(i=0;i<points.size();i++)
+                    if(points.get(i).isFirst) {
+                        System.out.println(i+" "+points.get(i).id);
+                        break;
+                    }
+                tsp2(points,i);
                 minDist = Komiwojazer2.minDistance;
                 bestPath = Komiwojazer2.bestPath;
                 System.out.println(minDist);
@@ -157,6 +185,7 @@ public class HelloApplication extends JPanel implements  ActionListener {
         this.add(modifyButton);
         this.add(deleteButton);
         this.add(addButton);
+        this.add(jStart);
         this.add(scrollPane);
 
         addMouseListener(new MouseAdapter() {
@@ -201,7 +230,7 @@ public class HelloApplication extends JPanel implements  ActionListener {
         g2d.setColor(Color.GREEN);
         g2d.setStroke(new BasicStroke(3));
         int n = bestPath.size()-1;
-        for(int i=0;i<n-1;i++)
+        for(int i=0;i<n;i++)
         {
             g2d.drawLine((int) bestPath.get(i).getxCoord()*AXIS_GAP + UKLWIDTH / 2 + BORDER_GAP_LEFT,
                     UKLHEIGHT / 2 + BORDER_GAP_TOP - (int) bestPath.get(i).getyCoord()*AXIS_GAP,
@@ -270,10 +299,6 @@ public class HelloApplication extends JPanel implements  ActionListener {
             }
         }
 
-        // Wyświetlenie punktu (0,0)
-        g.setColor(Color.RED);
-        g.fillOval(UKLWIDTH / 2 + BORDER_GAP_LEFT - POINT_RADIUS, UKLHEIGHT / 2 + BORDER_GAP_TOP - POINT_RADIUS, 2 * POINT_RADIUS, 2 * POINT_RADIUS);
-
         drawPath(g);
         // Wyświetlenie zapisanych punktów
         g.setColor(Color.BLUE);
@@ -281,6 +306,10 @@ public class HelloApplication extends JPanel implements  ActionListener {
         for (Point point : points) {
             if (point.isClicked) {
                 g.setColor(Color.RED);
+                point.isClicked=false;
+            }
+            else if (point.isFirst) {
+                g.setColor(Color.magenta);
                 point.isClicked=false;
             }
             else
@@ -364,7 +393,8 @@ public class HelloApplication extends JPanel implements  ActionListener {
         }
 
         public String toString() {
-            return "Punkt "+id+": "+xCoord+" "+yCoord;
+            if(isFirst) return "Punkt Startowy "+id+": "+xCoord+" "+yCoord;
+            else return "Punkt "+id+": "+xCoord+" "+yCoord;
         }
     }
 }
